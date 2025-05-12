@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking System - Booking</title>
+    <style>
+        #map {
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+        }
+        #location-status {
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        #vehicle-selection, #parking-details, #booking-summary {
+            display: none;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        #booking-summary {
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        #state-selection {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        #state-selection select {
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+        }
+        #slot-recommendations {
+            margin-top: 20px;
+        }
+        .slot-block {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f4f4f4;
+            width: 200px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .slot-block:hover {
+            background-color: #e0e0e0;
+        }
+        #slots-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Parking System - Booking</h1>
+    </header>
+
+    <main>
+        <div id="location-status">
+            <p><strong>Your Location:</strong></p>
+            <p id="location-info">Loading your location...</p>
+            <p id="location-name"><strong>Location Name:</strong> Fetching...</p>
+        </div>
+
+        <div id="state-selection">
+            <h2>Select Your State</h2>
+            <select id="state" onchange="updateMarkersForState()">
+                <option value="select">Select State</option>
+                <option value="Andhra Pradesh" data-lat="17.3588" data-lng="78.4747">Andhra Pradesh</option>
+                <option value="Arunachal Pradesh" data-lat="27.1026" data-lng="93.6053">Arunachal Pradesh</option>
+                <option value="Assam" data-lat="26.2006" data-lng="92.9376">Assam</option>
+                <option value="Bihar" data-lat="25.0961" data-lng="85.3131">Bihar</option>
+            </select>
+        </div>
+
+        <div id="map"></div>
+
+        <div id="vehicle-selection">
+            <h3>Select Your Vehicle Type:</h3>
+            <select id="vehicle-type">
+                <option value="select">Select Vehicle Type</option>
+                <option value="bike">Bike</option>
+                <option value="car">Car</option>
+            </select>
+        </div>
+
+        <div id="slot-recommendations" style="display: none;">
+            <h3>Recommended Parking Slots:</h3>
+            <div id="slots-container"></div>
+        </div>
+
+        <div id="parking-details">
+            <h3>Parking Slot Details:</h3>
+            <p id="slot-name"></p>
+            <p id="available-slots"></p>
+            <button onclick="confirmBooking()">Book Now</button>
+        </div>
+
+        <div id="booking-summary" style="display: none;"></div>
+    </main>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+    <script>
+        let map, userMarker, availableMarkers = [];
+        let selectedSpot = null;
+
+        const parkingSpots = [
+            { name: "Deccan Parking", carSlots: 5, bikeSlots: 3 },
+            { name: "Blue Way Parking", carSlots: 4, bikeSlots: 2 },
+            { name: "Western Parking", carSlots: 6, bikeSlots: 4 },
+            { name: "East Way Parking", carSlots: 7, bikeSlots: 5 }
+        ];
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 12,
+                center: { lat: 19.0760, lng: 72.8777 }
+            });
+            getUserLocation();
+        }
+
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+
+                        map.setCenter({ lat: userLat, lng: userLng });
+
+                        userMarker = new google.maps.Marker({
+                            position: { lat: userLat, lng: userLng },
+                            map: map,
+                            title: "Your Location",
+                            icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+                        });
+
+                        document.getElementById("location-info").innerText = Lat: ${userLat}, Lng: ${userLng};
+                        reverseGeocode(userLat, userLng, "location-name");
+
+                        addParkingMarkersAround(userLat, userLng);
+                    },
+                    error => {
+                        alert("Error getting location. Please enable GPS.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function reverseGeocode(lat, lng, elementId) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    document.getElementById(elementId).innerText = Location Name: ${results[0].formatted_address};
+                } else {
+                    document.getElementById(elementId).innerText = "Location Name: Not Found";
+                }
+            });
+        }
+
+        function updateMarkersForState() {
+            const stateDropdown = document.getElementById("state");
+            const selectedOption = stateDropdown.options[stateDropdown.selectedIndex];
+
+            if (selectedOption.value === "select") return;
+
+            const stateLat = parseFloat(selectedOption.getAttribute("data-lat"));
+            const stateLng = parseFloat(selectedOption.getAttribute("data-lng"));
+
+            map.setCenter({ lat: stateLat, lng: stateLng });
+            addParkingMarkersAround(stateLat, stateLng);
+            displayAvailableSlots();
+        }
+
+        function addParkingMarkersAround(lat, lng) {
+            clearMarkers();
+            const radius = 0.05;
+
+            parkingSpots.forEach(spot => {
+                const randomLat = lat + (Math.random() - 0.5) * radius;
+                const randomLng = lng + (Math.random() - 0.5) * radius;
+
+                const marker = new google.maps.Marker({
+                    position: { lat: randomLat, lng: randomLng },
+                    map: map,
+                    title: spot.name,
+                    icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+                });
+
+                marker.addListener('click', () => displayParkingDetails(spot));
+                availableMarkers.push(marker);
+            });
+        }
+
+        function clearMarkers() {
+            availableMarkers.forEach(marker => marker.setMap(null));
+            availableMarkers = [];
+        }
+
+        function displayParkingDetails(spot) {
+            selectedSpot = spot;
+            document.getElementById("slot-name").innerText = Parking Spot: ${spot.name};
+            document.getElementById("available-slots").innerText = Available Slots - Cars: ${spot.carSlots}, Bikes: ${spot.bikeSlots};
+            document.getElementById("parking-details").style.display = "block";
+        }
+
+        function confirmBooking() {
+            document.getElementById("booking-summary").innerHTML = <h3>Booking Confirmed!</h3><p>You have booked a slot at <strong>${selectedSpot.name}</strong></p>;
+            document.getElementById("booking-summary").style.display = "block";
+        }
+    </script>
+</body>
+</html>

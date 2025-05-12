@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #confirmation-details {
+            border: 1px solid #ddd;
+            padding: 20px;
+            background-color: #f9f9f9;
+            margin-top: 20px;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Booking Confirmed</h1>
+    <div id="confirmation-details">
+        <h2>Your Booking Details:</h2>
+        <p><strong>Parking Spot:</strong> <span id="confirm-spot"></span></p>
+        <p><strong>Available Slots:</strong> <span id="confirm-slots"></span></p>
+        <p><strong>Location:</strong> <span id="confirm-location"></span></p>
+        <p><strong>Location Name:</strong> <span id="confirm-location-name"></span></p>
+    </div>
+
+    <button onclick="window.location.href='index.html'">Go to Home</button>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&callback=initMap" async defer></script>
+    <script>
+        window.onload = function() {
+            const bookingDetails = JSON.parse(localStorage.getItem("bookingDetails"));
+            if (bookingDetails) {
+                document.getElementById("confirm-spot").innerText = bookingDetails.name;
+                document.getElementById("confirm-slots").innerText = `Cars: ${bookingDetails.carSlots}, Bikes: ${bookingDetails.bikeSlots}`;
+                document.getElementById("confirm-location").innerText = `Lat: ${bookingDetails.lat}, Lng: ${bookingDetails.lng}`;
+                
+                // Reverse Geocode the location to get the address
+                reverseGeocode(bookingDetails.lat, bookingDetails.lng);
+            } else {
+                alert("No booking details found.");
+            }
+        }
+
+        // Function to perform reverse geocoding to get location name
+        function reverseGeocode(lat, lng) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+                if (status === "OK" && results[0]) {
+                    document.getElementById("confirm-location-name").innerText = results[0].formatted_address;
+                } else {
+                    document.getElementById("confirm-location-name").innerText = "Location not found.";
+                }
+            });
+        }
+    </script>
+</body>
+</html>

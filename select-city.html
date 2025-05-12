@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select City</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Styling for the container */
+        #city-container {
+            display: none; /* Initially hidden */
+            margin-top: 10px;
+        }
+
+        #show-options {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            position: relative;
+        }
+
+        #show-options:hover {
+            background-color: #45a049;
+        }
+
+        #show-options::after {
+            content: "▼"; /* Unicode arrow symbol */
+            position: absolute;
+            right: 10px;
+            font-size: 12px;
+        }
+
+        #search-city {
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 100%;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        #city-dropdown {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #go-to-booking {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #008CBA;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #go-to-booking:hover {
+            background-color: #007BB5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Parking System - Select a state</h1>
+    </header>
+
+    <main>
+        <!-- Select button with down arrow -->
+        <button id="show-options" onclick="toggleCityOptions()">Select City</button>
+
+        <!-- Hidden container with search input and dropdown -->
+        <div id="city-container">
+            <input 
+                type="text" 
+                id="search-city" 
+                placeholder="Search for a city..." 
+                oninput="filterCities()" 
+            />
+
+            <select id="city-dropdown" size="6">
+                <option value="andhra_pradesh">Andhra Pradesh</option>
+                <option value="arunachal_pradesh">Arunachal Pradesh</option>
+                <option value="assam">Assam</option>
+                <option value="bihar">Bihar</option>
+                <option value="chhattisgarh">Chhattisgarh</option>
+                <option value="goa">Goa</option>
+                <option value="gujarat">Gujarat</option>
+                <option value="haryana">Haryana</option>
+                <option value="himachal_pradesh">Himachal Pradesh</option>
+                <option value="jharkhand">Jharkhand</option>
+                <option value="karnataka">Karnataka</option>
+                <option value="kerala">Kerala</option>
+                <option value="madhya_pradesh">Madhya Pradesh</option>
+                <option value="maharashtra">Maharashtra</option>
+                <option value="manipur">Manipur</option>
+                <option value="meghalaya">Meghalaya</option>
+                <option value="mizoram">Mizoram</option>
+                <option value="nagaland">Nagaland</option>
+                <option value="odisha">Odisha</option>
+                <option value="punjab">Punjab</option>
+                <option value="rajasthan">Rajasthan</option>
+                <option value="sikkim">Sikkim</option>
+                <option value="tamil_nadu">Tamil Nadu</option>
+                <option value="telangana">Telangana</option>
+                <option value="tripura">Tripura</option>
+                <option value="uttar_pradesh">Uttar Pradesh</option>
+                <option value="uttarakhand">Uttarakhand</option>
+                <option value="west_bengal">West Bengal</option>
+                <option value="andaman_nicobar">Andaman and Nicobar Islands</option>
+                <option value="chandigarh">Chandigarh</option>
+                <option value="dadra_nagar_haveli">Dadra and Nagar Haveli and Daman and Diu</option>
+                <option value="delhi">Delhi</option>
+                <option value="jammu_kashmir">Jammu and Kashmir</option>
+                <option value="ladakh">Ladakh</option>
+                <option value="lakshadweep">Lakshadweep</option>
+                <option value="puducherry">Puducherry</option>
+            </select>
+
+            <!-- Go to booking button -->
+            <button id="go-to-booking" onclick="redirectToBooking()">Go to Booking</button>
+        </div>
+    </main>
+
+    <script>
+        // Check if the user is logged in
+        document.addEventListener("DOMContentLoaded", () => {
+            const isLoggedIn = localStorage.getItem("isLoggedIn");
+            if (!isLoggedIn) {
+                alert("You must log in to proceed!");
+                window.location.href = "login.html"; // Redirect to login page
+            }
+        });
+
+        // Toggle visibility of the city container
+        function toggleCityOptions() {
+            const container = document.getElementById('city-container');
+            container.style.display = container.style.display === 'none' || container.style.display === '' 
+                ? 'block' 
+                : 'none';
+        }
+
+        // Filter dropdown options based on search input
+        function filterCities() {
+            const searchValue = document.getElementById('search-city').value.toLowerCase();
+            const cityDropdown = document.getElementById('city-dropdown');
+            const options = cityDropdown.options;
+
+            for (let i = 0; i < options.length; i++) {
+                const city = options[i].textContent.toLowerCase();
+                options[i].style.display = city.includes(searchValue) ? '' : 'none';
+            }
+        }
+
+        // Redirect to booking page with selected city
+        function redirectToBooking() {
+            const cityDropdown = document.getElementById('city-dropdown');
+            const selectedCity = cityDropdown.value;
+
+            if (!selectedCity) {
+                alert('Please select a city!');
+                return;
+            }
+
+            localStorage.setItem('selectedCity', selectedCity); // Save the selected city to localStorage
+            window.location.href = 'booking.html'; // Redirect to the booking page
+        }
+    </script>
+</body>
+</html>

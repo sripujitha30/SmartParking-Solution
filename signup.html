@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Parking System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="signup-container">
+        <h2>Create a New Account</h2>
+        <form id="signup-form">
+            <label for="new-username">Username:</label>
+            <input type="text" id="new-username" placeholder="Enter username" required>
+            
+            <label for="new-password">Password:</label>
+            <input type="password" id="new-password" placeholder="Enter password" required>
+            
+            <label for="confirm-password">Confirm Password:</label>
+            <input type="password" id="confirm-password" placeholder="Confirm password" required>
+            
+            <button type="submit">Sign Up</button>
+        </form>
+        <p id="signup-error" class="error-message"></p>
+        <p>Already have an account? <a href="login.html">Log in here</a></p>
+    </div>
+    <script>
+        // Handle Sign-up logic and store data in localStorage
+        document.getElementById('signup-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('new-username').value;
+            const password = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const errorField = document.getElementById('signup-error');
+
+            // Validate if passwords match
+            if (password !== confirmPassword) {
+                errorField.textContent = "Passwords do not match!";
+                return;
+            }
+
+            // Retrieve existing users from localStorage
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            
+            // Check if the username is already taken
+            if (users.some(user => user.username === username)) {
+                errorField.textContent = "Username already registered! Please choose a different one.";
+                return;
+            }
+
+            // Store new user in localStorage
+            users.push({ username, password });
+            localStorage.setItem('users', JSON.stringify(users));
+
+            alert("Account created successfully! Please log in.");
+            window.location.href = "login.html"; // Redirect to login
+        });
+    </script>
+</body>
+</html>
